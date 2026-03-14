@@ -40,16 +40,12 @@ export default function App() {
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/receipts" element={<Receipts />} />
-        <Route path="/receipts/new" element={<ReceiptDetail />} />
         <Route path="/receipts/:id" element={<ReceiptDetail />} />
         <Route path="/deliveries" element={<Deliveries />} />
-        <Route path="/deliveries/new" element={<DeliveryDetail />} />
         <Route path="/deliveries/:id" element={<DeliveryDetail />} />
         <Route path="/transfers" element={<Transfers />} />
-        <Route path="/transfers/new" element={<TransferDetail />} />
         <Route path="/transfers/:id" element={<TransferDetail />} />
         <Route path="/adjustments" element={<Adjustments />} />
-        <Route path="/adjustments/new" element={<AdjustmentDetail />} />
         <Route path="/adjustments/:id" element={<AdjustmentDetail />} />
         <Route path="/move-history" element={<MoveHistory />} />
         <Route path="/settings" element={<Settings />} />
