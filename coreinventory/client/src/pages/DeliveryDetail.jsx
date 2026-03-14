@@ -39,6 +39,7 @@ export default function DeliveryDetail() {
   const [locations, setLocations] = useState([])
   const [warehouses, setWarehouses] = useState([])
   const [loading, setLoading] = useState(!isNew)
+  const [metaLoading, setMetaLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [shortages, setShortages] = useState([])
@@ -74,12 +75,17 @@ export default function DeliveryDetail() {
   }
 
   const fetchMeta = async () => {
+    setMetaLoading(true)
     try {
       const [pRes, lRes, wRes] = await Promise.all([API.get('/api/products'), API.get('/api/locations'), API.get('/api/warehouses')])
       setProducts(pRes.data)
       setLocations(lRes.data)
       setWarehouses(wRes.data)
-    } catch {}
+    } catch {
+      toast.error('Failed to load form data. Please refresh the page.')
+    } finally {
+      setMetaLoading(false)
+    }
   }
 
   const filteredLocations = form.warehouse_id
@@ -125,7 +131,12 @@ export default function DeliveryDetail() {
   const isEditable = isNew || ['draft', 'waiting'].includes(delivery?.status || '')
   const status = delivery?.status || 'draft'
 
-  if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+  if (loading || metaLoading) return (
+    <div className="flex flex-col items-center justify-center py-20 gap-3">
+      <Spinner size="lg" />
+      <p className="text-sm text-gray-400">{metaLoading ? 'Loading form data…' : 'Loading delivery…'}</p>
+    </div>
+  )
 
   return (
     <div className="space-y-4">
