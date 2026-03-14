@@ -50,22 +50,6 @@ This application connects to a backend **REST API** to perform real-time invento
 
 ---
 
-# 🖼 Screenshots
-
-Create a folder named **screenshots** inside your repository.
-
-Example structure:
-
-```
-screenshots/
-├── login.png
-├── dashboard.png
-├── inventory.png
-├── product_details.png
-├── warehouse_view.png
-```
-
-Then display them in README:
 
 ## Login Screen
 ![Login](screenshots/login.png)
