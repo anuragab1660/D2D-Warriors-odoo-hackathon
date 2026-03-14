@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, List, LayoutGrid, Search } from 'lucide-react'
+import { Plus, List, LayoutGrid, Search, FileDown } from 'lucide-react'
 import API from '../api/client'
 import DataTable from '../components/DataTable'
 import StatusBadge from '../components/StatusBadge'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast'
+import { generateReceiptPDF } from '../utils/receiptPDF'
 
 const STATUS_PILLS = ['all', 'draft', 'ready', 'done', 'cancelled']
 
@@ -14,6 +15,7 @@ export default function Receipts() {
   const { toasts, toast, removeToast } = useToast()
   const [receipts, setReceipts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [pdfLoading, setPdfLoading] = useState(null)
   const [view, setView] = useState('list')
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
@@ -34,6 +36,19 @@ export default function Receipts() {
     !search || r.ref?.toLowerCase().includes(search.toLowerCase()) || r.supplier?.toLowerCase().includes(search.toLowerCase())
   )
 
+  const handleDownloadPDF = async (e, row) => {
+    e.stopPropagation()
+    setPdfLoading(row.id)
+    try {
+      const res = await API.get(`/api/receipts/${row.id}`)
+      await generateReceiptPDF(res.data)
+    } catch {
+      toast.error('Failed to generate PDF')
+    } finally {
+      setPdfLoading(null)
+    }
+  }
+
   const columns = [
     { key: '#', label: '#', render: (_, __, i) => <span className="text-gray-400">{i + 1}</span> },
     { key: 'ref', label: 'Reference', render: (v) => <span className="font-medium text-indigo-600">{v}</span> },
@@ -43,6 +58,19 @@ export default function Receipts() {
     { key: 'schedule_date', label: 'Schedule Date', render: (v) => v ? new Date(v).toLocaleDateString() : '—' },
     { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
     { key: 'lines_count', label: 'Lines' },
+    { key: 'pdf', label: 'PDF', render: (_, row) => (
+      <button
+        onClick={(e) => handleDownloadPDF(e, row)}
+        disabled={pdfLoading === row.id}
+        title="Download Receipt PDF"
+        className="flex items-center justify-center w-8 h-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-40 transition-colors"
+      >
+        {pdfLoading === row.id
+          ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-400 border-t-transparent" />
+          : <FileDown size={16} />
+        }
+      </button>
+    )},
   ]
 
   const kanbanCols = ['draft', 'ready', 'done', 'cancelled']
