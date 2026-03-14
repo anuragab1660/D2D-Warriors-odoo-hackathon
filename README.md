@@ -54,11 +54,5 @@ The **Web Admin Dashboard** provides a complete management interface.
 - Stock analytics
 - Purchase order tracking
 
----
 
-# 🖼 Screenshots
-
-## Mobile Application
-
-Create a folder named **screenshots/mobile**
 
