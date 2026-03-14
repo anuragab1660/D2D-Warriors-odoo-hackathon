@@ -171,7 +171,7 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// POST /api/deliveries/:id/todo — Draft/Waiting → Ready or Waiting
+// POST /api/deliveries/:id/todo — Draft/Waiting → Ready
 router.post('/:id/todo', auth, async (req, res) => {
   try {
     const { id } = req.params;
@@ -180,26 +180,6 @@ router.post('/:id/todo', auth, async (req, res) => {
     const delivery = check.rows[0];
     if (!['draft', 'waiting'].includes(delivery.status)) {
       return res.status(400).json({ error: 'Delivery must be in Draft or Waiting status' });
-    }
-
-    const linesRes = await db.query('SELECT * FROM delivery_lines WHERE delivery_id = $1', [id]);
-    const shortages = [];
-
-    for (const line of linesRes.rows) {
-      const stockRes = await db.query(
-        'SELECT COALESCE(SUM(qty), 0) AS qty FROM stock WHERE product_id = $1',
-        [line.product_id]
-      );
-      const available = parseFloat(stockRes.rows[0].qty);
-      if (available < parseFloat(line.qty_demanded)) {
-        const prodRes = await db.query('SELECT name FROM products WHERE id = $1', [line.product_id]);
-        shortages.push({ product: prodRes.rows[0]?.name, available, demanded: parseFloat(line.qty_demanded) });
-      }
-    }
-
-    if (shortages.length > 0) {
-      await db.query('UPDATE deliveries SET status = $1 WHERE id = $2', ['waiting', id]);
-      return res.json({ status: 'waiting', shortages });
     }
 
     await db.query('UPDATE deliveries SET status = $1 WHERE id = $2', ['ready', id]);

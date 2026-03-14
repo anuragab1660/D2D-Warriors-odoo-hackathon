@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Printer, AlertTriangle } from 'lucide-react'
+import { Plus, Trash2, Printer } from 'lucide-react'
 import API from '../api/client'
 import useAuthStore from '../store/authStore'
 import Spinner from '../components/Spinner'
@@ -42,7 +42,6 @@ export default function DeliveryDetail() {
   const [metaLoading, setMetaLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
-  const [shortages, setShortages] = useState([])
 
   const [locationStock, setLocationStock] = useState({})
 
@@ -127,15 +126,9 @@ export default function DeliveryDetail() {
 
   const handleAction = async (action) => {
     setActionLoading(true)
-    setShortages([])
     try {
-      const res = await API.post(`/api/deliveries/${id}/${action}`)
-      if (res.data.status === 'waiting' && res.data.shortages) {
-        setShortages(res.data.shortages)
-        toast.warning('Some products are out of stock')
-      } else {
-        toast.success(action === 'todo' ? 'Delivery marked as Ready' : action === 'validate' ? 'Delivery completed' : 'Delivery cancelled')
-      }
+      await API.post(`/api/deliveries/${id}/${action}`)
+      toast.success(action === 'todo' ? 'Delivery marked as Ready' : action === 'validate' ? 'Delivery completed' : 'Delivery cancelled')
       await fetchDelivery()
     } catch (err) { toast.error(err.response?.data?.error || 'Action failed') } finally { setActionLoading(false) }
   }
@@ -212,20 +205,7 @@ export default function DeliveryDetail() {
         </div>
       </div>
 
-      <p className="text-xs text-gray-400">Draft: Initial state | Waiting: Waiting for stock | Ready: Ready to deliver | Done: Delivered</p>
-
-      {/* Waiting banner */}
-      {status === 'waiting' && shortages.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle size={16} />
-            <span className="text-sm font-medium">Waiting for stock — the following products are currently unavailable:</span>
-          </div>
-          <ul className="text-xs ml-6 list-disc">
-            {shortages.map((s, i) => <li key={i}>{s.product} — Available: {s.available}, Demanded: {s.demanded}</li>)}
-          </ul>
-        </div>
-      )}
+      <p className="text-xs text-gray-400">Draft: Initial state | Waiting: On hold | Ready: Ready to deliver | Done: Delivered</p>
 
       {/* Done banner */}
       {status === 'done' && (
