@@ -125,13 +125,18 @@ export default function DeliveryDetail() {
   }
 
   const handleStatusChange = async (newStatus) => {
-    if (newStatus === status) return
-    let action
-    if (newStatus === 'waiting' || newStatus === 'ready') action = 'todo'
-    else if (newStatus === 'done') action = 'validate'
-    else if (newStatus === 'cancelled') action = 'cancel'
-    else return
-    await handleAction(action)
+    if (newStatus === delivery?.status) return
+    setActionLoading(true)
+    setShortages([])
+    try {
+      await API.patch(`/api/deliveries/${id}/status`, { status: newStatus })
+      toast.success(`Status updated to ${newStatus}`)
+      await fetchDelivery()
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to change status')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const addLine = () => setLines(p => [...p, { product_id: '', qty_demanded: 0 }])
@@ -265,26 +270,32 @@ export default function DeliveryDetail() {
             <input value={form.responsible} onChange={e => setForm(p => ({ ...p, responsible: e.target.value }))} disabled={!isEditable}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50" />
           </div>
-          {!isNew && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select
-                value={status}
-                onChange={e => handleStatusChange(e.target.value)}
-                disabled={actionLoading || status === 'done' || status === 'cancelled'}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 capitalize"
-              >
-                <option value="draft">Draft</option>
-                <option value="waiting">Waiting</option>
-                <option value="ready">Ready</option>
-                <option value="done">Done</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              {(status === 'done' || status === 'cancelled') && (
-                <p className="text-xs text-gray-400 mt-1">Status is locked — cannot be changed</p>
-              )}
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            {isNew ? (
+              <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500">
+                Draft
+              </div>
+            ) : (
+              <>
+                <select
+                  value={status}
+                  onChange={e => handleStatusChange(e.target.value)}
+                  disabled={actionLoading || status === 'done' || status === 'cancelled'}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 capitalize"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="waiting">Waiting</option>
+                  <option value="ready">Ready</option>
+                  <option value="done">Done</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                {(status === 'done' || status === 'cancelled') && (
+                  <p className="text-xs text-gray-400 mt-1">Status is locked — cannot be changed</p>
+                )}
+              </>
+            )}
+          </div>
           <div className="col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
             <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} disabled={!isEditable} rows={2}

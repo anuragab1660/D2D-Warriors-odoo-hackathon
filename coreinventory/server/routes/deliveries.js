@@ -321,6 +321,81 @@ router.post('/:id/cancel', auth, async (req, res) => {
   }
 });
 
+// PATCH /api/deliveries/:id/status — Force set status (bypasses stock checks)
+router.patch('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status: newStatus } = req.body;
+
+    const validStatuses = ['draft', 'waiting', 'ready', 'done', 'cancelled'];
+    if (!validStatuses.includes(newStatus)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const check = await db.query('SELECT * FROM deliveries WHERE id = $1', [id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Delivery not found' });
+    const delivery = check.rows[0];
+
+    if (['done', 'cancelled'].includes(delivery.status)) {
+      return res.status(400).json({ error: 'Cannot change status of a done or cancelled delivery' });
+    }
+
+    if (newStatus === 'done') {
+      const linesRes = await db.query(`
+        SELECT dl.*, p.name AS product_name
+        FROM delivery_lines dl JOIN products p ON p.id = dl.product_id
+        WHERE dl.delivery_id = $1
+      `, [id]);
+
+      const locRes = await db.query('SELECT name FROM locations WHERE id = $1', [delivery.location_id]);
+      const locationName = locRes.rows[0]?.name || '';
+
+      for (const line of linesRes.rows) {
+        const stockRes = await db.query(
+          'SELECT COALESCE(qty, 0) AS qty FROM stock WHERE product_id = $1 AND location_id = $2',
+          [line.product_id, delivery.location_id]
+        );
+        const available = stockRes.rows.length > 0 ? parseFloat(stockRes.rows[0].qty) : 0;
+        if (available > 0) {
+          const deduct = Math.min(available, parseFloat(line.qty_demanded));
+          await db.query(
+            'UPDATE stock SET qty = qty - $1 WHERE product_id = $2 AND location_id = $3',
+            [deduct, line.product_id, delivery.location_id]
+          );
+        }
+        await db.query('UPDATE delivery_lines SET qty_done = $1 WHERE id = $2', [line.qty_demanded, line.id]);
+        await db.query(
+          `INSERT INTO move_history (ref, type, product_id, product_name, from_location_id, from_location_name, qty)
+           VALUES ($1, 'delivery', $2, $3, $4, $5, $6)`,
+          [delivery.ref, line.product_id, line.product_name, delivery.location_id, locationName, line.qty_demanded]
+        );
+      }
+    }
+
+    await db.query('UPDATE deliveries SET status = $1 WHERE id = $2', [newStatus, id]);
+
+    const result = await db.query(`
+      SELECT d.*, l.name AS location_name, l.warehouse_id, w.name AS warehouse_name
+      FROM deliveries d
+      LEFT JOIN locations l ON l.id = d.location_id
+      LEFT JOIN warehouses w ON w.id = l.warehouse_id
+      WHERE d.id = $1
+    `, [id]);
+
+    const finalLines = await db.query(`
+      SELECT dl.*, p.name AS product_name, p.sku, p.uom,
+        COALESCE((SELECT s.qty FROM stock s WHERE s.product_id = dl.product_id AND s.location_id = $2), 0) AS current_stock
+      FROM delivery_lines dl JOIN products p ON p.id = dl.product_id
+      WHERE dl.delivery_id = $1
+    `, [id, delivery.location_id]);
+
+    res.json({ ...result.rows[0], lines: finalLines.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // DELETE /api/deliveries/:id
 router.delete('/:id', auth, async (req, res) => {
   try {
