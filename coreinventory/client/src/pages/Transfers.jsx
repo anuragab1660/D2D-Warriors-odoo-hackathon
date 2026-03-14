@@ -27,9 +27,12 @@ export default function Transfers() {
     { key: 'ref', label: 'Reference', render: (v) => <span className="font-medium text-indigo-600">{v}</span> },
     { key: 'from_location_name', label: 'From Location', render: (v, row) => <span>{v} <span className="text-xs text-gray-400">({row.from_warehouse_name})</span></span> },
     { key: 'to_location_name', label: 'To Location', render: (v, row) => <span>{v} <span className="text-xs text-gray-400">({row.to_warehouse_name})</span></span> },
+    { key: 'products', label: 'Products', render: (v) => v
+      ? <span className="text-sm text-gray-700">{v}</span>
+      : <span className="text-gray-300 text-sm">—</span>
+    },
     { key: 'date', label: 'Date', render: (v) => v ? new Date(v).toLocaleDateString() : '—' },
     { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
-    { key: 'lines_count', label: 'Lines' },
   ]
 
   return (
