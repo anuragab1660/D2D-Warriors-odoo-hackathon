@@ -26,6 +26,23 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// GET /api/locations/:id/stock — stock quantities per product at this location
+router.get('/:id/stock', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await db.query(`
+      SELECT s.product_id, s.qty, p.name AS product_name, p.sku
+      FROM stock s
+      JOIN products p ON p.id = s.product_id
+      WHERE s.location_id = $1
+    `, [id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.post('/', auth, requireManager, async (req, res) => {
   try {
     const { warehouse_id, name, short_code } = req.body;

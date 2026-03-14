@@ -44,6 +44,8 @@ export default function DeliveryDetail() {
   const [actionLoading, setActionLoading] = useState(false)
   const [shortages, setShortages] = useState([])
 
+  const [locationStock, setLocationStock] = useState({})
+
   const [form, setForm] = useState({
     destination: '', city: '', location_id: '', notes: '',
     date: new Date().toISOString().split('T')[0], schedule_date: '',
@@ -55,6 +57,20 @@ export default function DeliveryDetail() {
     fetchMeta()
     if (!isNew) fetchDelivery()
   }, [id])
+
+  useEffect(() => {
+    if (form.location_id) {
+      API.get(`/api/locations/${form.location_id}/stock`)
+        .then(res => {
+          const map = {}
+          res.data.forEach(s => { map[s.product_id] = parseFloat(s.qty) })
+          setLocationStock(map)
+        })
+        .catch(() => {})
+    } else {
+      setLocationStock({})
+    }
+  }, [form.location_id])
 
   const fetchDelivery = async () => {
     try {
@@ -251,7 +267,7 @@ export default function DeliveryDetail() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Source Warehouse</label>
-            <select value={form.warehouse_id} onChange={e => { setForm(p => ({ ...p, warehouse_id: e.target.value, location_id: '' })) }} disabled={!isEditable}
+            <select value={form.warehouse_id} onChange={e => { setForm(p => ({ ...p, warehouse_id: e.target.value, location_id: '' })); setLocationStock({}) }} disabled={!isEditable}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50">
               <option value="">All Warehouses</option>
               {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -312,13 +328,19 @@ export default function DeliveryDetail() {
             <tr>
               <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Product</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Quantity</th>
+              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Available at Location</th>
               {isEditable && <th className="px-4 py-2 w-10"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {lines.map((line, i) => {
               const prod = products.find(p => p.id === parseInt(line.product_id))
-              const isShort = prod && parseFloat(prod.free_to_use) < parseFloat(line.qty_demanded)
+              const locAvail = form.location_id && line.product_id
+                ? (locationStock[parseInt(line.product_id)] ?? null)
+                : null
+              const deliveryLineStock = delivery?.lines?.[i]?.current_stock
+              const availableQty = locAvail !== null ? locAvail : (deliveryLineStock ?? prod?.free_to_use ?? 0)
+              const isShort = prod && parseFloat(availableQty) < parseFloat(line.qty_demanded)
               return (
                 <tr key={i} className={isShort && isEditable ? 'bg-red-50' : ''}>
                   <td className="px-4 py-2">
@@ -337,10 +359,22 @@ export default function DeliveryDetail() {
                       <div className="flex items-center gap-2">
                         <input type="number" value={line.qty_demanded} onChange={e => updateLine(i, 'qty_demanded', e.target.value)} min={0}
                           className={`border rounded-lg px-3 py-1.5 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isShort ? 'border-red-400' : 'border-gray-300'}`} />
-                        {isShort && <span className="text-xs text-red-600 font-medium bg-red-100 px-2 py-0.5 rounded">OUT OF STOCK</span>}
+                        {isShort && <span className="text-xs text-red-600 font-medium bg-red-100 px-2 py-0.5 rounded">LOW STOCK</span>}
                       </div>
                     ) : (
                       <span className="text-sm font-medium">{line.qty_demanded}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2">
+                    {line.product_id ? (
+                      <span className={`text-sm font-medium ${isShort ? 'text-red-600' : 'text-green-600'}`}>
+                        {availableQty}
+                        {isShort && form.location_id && (
+                          <span className="text-xs text-red-400 block">Need {line.qty_demanded}</span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300 text-sm">—</span>
                     )}
                   </td>
                   {isEditable && (
