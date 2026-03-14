@@ -3,6 +3,8 @@ import { Outlet, useLocation, Link } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
+
+
 const routeNames = {
   '/dashboard': 'Dashboard',
   '/products': 'Products',
@@ -52,6 +54,9 @@ function Breadcrumb() {
 }
 
 export default function Layout() {
+  const location = useLocation()
+  const isDashboard = location.pathname === '/dashboard'
+
   return (
     <div className="flex min-h-screen bg-[#F7F8FA]">
       <div className="sidebar fixed left-0 top-0 h-full z-30 no-print">
@@ -59,10 +64,9 @@ export default function Layout() {
       </div>
       <div className="flex-1 ml-60 main-content">
         <div className="fixed top-0 left-60 right-0 z-20 no-print">
-          <Breadcrumb />
-          <Header />
+          {isDashboard ? <Header /> : <Breadcrumb />}
         </div>
-        <div className="pt-24 px-6 pb-8">
+        <div className={`${isDashboard ? 'pt-14' : 'pt-10'} px-6 pb-8`}>
           <Outlet />
         </div>
       </div>
