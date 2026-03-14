@@ -27,9 +27,12 @@ export default function Adjustments() {
     { key: 'ref', label: 'Reference', render: (v) => <span className="font-medium text-indigo-600">{v}</span> },
     { key: 'location_name', label: 'Location' },
     { key: 'warehouse_name', label: 'Warehouse' },
+    { key: 'products', label: 'Products', render: (v) => v
+      ? <span className="text-sm text-gray-700">{v}</span>
+      : <span className="text-gray-300 text-sm">—</span>
+    },
     { key: 'date', label: 'Date', render: (v) => v ? new Date(v).toLocaleDateString() : '—' },
     { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
-    { key: 'lines_count', label: 'Lines' },
   ]
 
   return (

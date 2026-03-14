@@ -8,7 +8,10 @@ router.get('/', auth, async (req, res) => {
   try {
     const result = await db.query(`
       SELECT a.*, l.name AS location_name, w.name AS warehouse_name,
-        (SELECT COUNT(*) FROM adjustment_lines WHERE adjustment_id = a.id) AS lines_count
+        (SELECT COUNT(*) FROM adjustment_lines WHERE adjustment_id = a.id) AS lines_count,
+        (SELECT STRING_AGG(p.name || ' (' || al.counted_qty || ')', ', ' ORDER BY p.name)
+         FROM adjustment_lines al JOIN products p ON p.id = al.product_id
+         WHERE al.adjustment_id = a.id) AS products
       FROM adjustments a
       LEFT JOIN locations l ON l.id = a.location_id
       LEFT JOIN warehouses w ON w.id = l.warehouse_id

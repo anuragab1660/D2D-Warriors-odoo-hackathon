@@ -110,8 +110,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-heading font-bold text-2xl text-gray-900">Dashboard</h2>
-          <p className="text-sm text-gray-500 mt-0.5">{today}</p>
+          <p className="text-sm text-gray-500">{today}</p>
         </div>
       </div>
 
