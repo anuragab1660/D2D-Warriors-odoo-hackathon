@@ -335,12 +335,12 @@ export default function DeliveryDetail() {
           <tbody className="divide-y divide-gray-100">
             {lines.map((line, i) => {
               const prod = products.find(p => p.id === parseInt(line.product_id))
-              const locAvail = form.location_id && line.product_id
-                ? (locationStock[parseInt(line.product_id)] ?? null)
+              const locQty = line.product_id
+                ? (form.location_id
+                    ? (locationStock[parseInt(line.product_id)] ?? delivery?.lines?.[i]?.current_stock ?? '—')
+                    : (delivery?.lines?.[i]?.current_stock ?? '—'))
                 : null
-              const deliveryLineStock = delivery?.lines?.[i]?.current_stock
-              const availableQty = locAvail !== null ? locAvail : (deliveryLineStock ?? prod?.free_to_use ?? 0)
-              const isShort = prod && parseFloat(availableQty) < parseFloat(line.qty_demanded)
+              const isShort = prod && parseFloat(prod.free_to_use ?? 0) < parseFloat(line.qty_demanded)
               return (
                 <tr key={i} className={isShort && isEditable ? 'bg-red-50' : ''}>
                   <td className="px-4 py-2">
@@ -366,13 +366,8 @@ export default function DeliveryDetail() {
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {line.product_id ? (
-                      <span className={`text-sm font-medium ${isShort ? 'text-red-600' : 'text-green-600'}`}>
-                        {availableQty}
-                        {isShort && form.location_id && (
-                          <span className="text-xs text-red-400 block">Need {line.qty_demanded}</span>
-                        )}
-                      </span>
+                    {locQty !== null ? (
+                      <span className="text-sm font-medium text-gray-700">{locQty}</span>
                     ) : (
                       <span className="text-gray-300 text-sm">—</span>
                     )}

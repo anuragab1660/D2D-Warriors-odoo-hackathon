@@ -187,10 +187,10 @@ router.post('/:id/todo', auth, async (req, res) => {
 
     for (const line of linesRes.rows) {
       const stockRes = await db.query(
-        'SELECT COALESCE(qty, 0) AS qty FROM stock WHERE product_id = $1 AND location_id = $2',
-        [line.product_id, delivery.location_id]
+        'SELECT COALESCE(SUM(qty), 0) AS qty FROM stock WHERE product_id = $1',
+        [line.product_id]
       );
-      const available = stockRes.rows.length > 0 ? parseFloat(stockRes.rows[0].qty) : 0;
+      const available = parseFloat(stockRes.rows[0].qty);
       if (available < parseFloat(line.qty_demanded)) {
         const prodRes = await db.query('SELECT name FROM products WHERE id = $1', [line.product_id]);
         shortages.push({ product: prodRes.rows[0]?.name, available, demanded: parseFloat(line.qty_demanded) });
