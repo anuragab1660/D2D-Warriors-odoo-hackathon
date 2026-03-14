@@ -5,9 +5,12 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast'
 import Spinner from '../components/Spinner'
+import useAuthStore from '../store/authStore'
 
 export default function Categories() {
   const { toasts, toast, removeToast } = useToast()
+  const { user } = useAuthStore()
+  const isManager = user?.role === 'manager'
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [newName, setNewName] = useState('')
@@ -75,22 +78,24 @@ export default function Categories() {
         </div>
       </div>
 
-      {/* Add form */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <form onSubmit={handleAdd} className="flex items-center gap-3">
-          <input
-            type="text"
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            placeholder="New category name…"
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button type="submit" disabled={adding || !newName.trim()}
-            className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-            <Plus size={15} /> Add Category
-          </button>
-        </form>
-      </div>
+      {/* Add form — managers only */}
+      {isManager && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <form onSubmit={handleAdd} className="flex items-center gap-3">
+            <input
+              type="text"
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              placeholder="New category name…"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button type="submit" disabled={adding || !newName.trim()}
+              className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+              <Plus size={15} /> Add Category
+            </button>
+          </form>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
@@ -120,19 +125,21 @@ export default function Categories() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      {editId === cat.id ? (
-                        <>
-                          <button onClick={() => handleEdit(cat.id)} className="text-green-500 hover:text-green-700"><Check size={16} /></button>
-                          <button onClick={() => setEditId(null)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => { setEditId(cat.id); setEditName(cat.name) }} className="text-gray-400 hover:text-indigo-600 transition-colors"><Pencil size={15} /></button>
-                          <button onClick={() => setDeleteId(cat.id)} className="text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
-                        </>
-                      )}
-                    </div>
+                    {isManager && (
+                      <div className="flex items-center justify-end gap-2">
+                        {editId === cat.id ? (
+                          <>
+                            <button onClick={() => handleEdit(cat.id)} className="text-green-500 hover:text-green-700"><Check size={16} /></button>
+                            <button onClick={() => setEditId(null)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => { setEditId(cat.id); setEditName(cat.name) }} className="text-gray-400 hover:text-indigo-600 transition-colors"><Pencil size={15} /></button>
+                            <button onClick={() => setDeleteId(cat.id)} className="text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

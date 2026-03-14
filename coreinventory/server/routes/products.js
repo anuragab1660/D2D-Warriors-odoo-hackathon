@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const auth = require('../middleware/auth');
+const requireManager = require('../middleware/requireManager');
 
 // GET /api/products
 router.get('/', auth, async (req, res) => {
@@ -81,7 +82,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // POST /api/products
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, requireManager, async (req, res) => {
   try {
     const { name, sku, category_id, uom, per_unit_cost, reorder_qty, initial_stock, initial_location_id } = req.body;
 
@@ -110,7 +111,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // PUT /api/products/:id
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, requireManager, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, sku, category_id, uom, per_unit_cost, reorder_qty } = req.body;
@@ -129,7 +130,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // PATCH /api/products/:id/stock
-router.patch('/:id/stock', auth, async (req, res) => {
+router.patch('/:id/stock', auth, requireManager, async (req, res) => {
   try {
     const { id } = req.params;
     const { location_id, qty } = req.body;
@@ -167,7 +168,7 @@ router.patch('/:id/stock', auth, async (req, res) => {
 });
 
 // DELETE /api/products/:id
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, requireManager, async (req, res) => {
   try {
     const { id } = req.params;
     await db.query('DELETE FROM products WHERE id = $1', [id]);

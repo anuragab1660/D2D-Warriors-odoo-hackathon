@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const auth = require('../middleware/auth');
+const requireManager = require('../middleware/requireManager');
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -20,7 +21,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, requireManager, async (req, res) => {
   try {
     const { name, short_code, address } = req.body;
     if (!name || !short_code) return res.status(400).json({ error: 'Name and short code are required' });
@@ -35,7 +36,7 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, requireManager, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, short_code, address } = req.body;
@@ -51,7 +52,7 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, requireManager, async (req, res) => {
   try {
     const { id } = req.params;
     await db.query('DELETE FROM warehouses WHERE id = $1', [id]);

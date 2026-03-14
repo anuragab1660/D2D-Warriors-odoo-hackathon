@@ -46,12 +46,17 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-2">
-        {navItems.map((group, gi) => (
+        {navItems.map((group, gi) => {
+          const visibleItems = group.items.filter(item =>
+            item.path !== '/settings' || user?.role === 'manager'
+          )
+          if (visibleItems.length === 0) return null
+          return (
           <div key={gi}>
             {group.section && (
               <p className="text-xs text-[#9EA3AE] uppercase tracking-widest px-5 mt-4 mb-1">{group.section}</p>
             )}
-            {group.items.map(item => {
+            {visibleItems.map(item => {
               const active = isActive(item.path)
               return (
                 <button
@@ -70,7 +75,8 @@ export default function Sidebar() {
               )
             })}
           </div>
-        ))}
+          )
+        })}
       </nav>
 
       {/* User section */}

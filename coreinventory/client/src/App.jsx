@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -26,6 +27,12 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+function ManagerRoute({ children }) {
+  const user = JSON.parse(localStorage.getItem('ci_user') || '{}')
+  if (user?.role !== 'manager') return <Navigate to="/dashboard" replace />
+  return children
+}
+
 export default function App() {
   return (
     <Routes>
@@ -48,7 +55,7 @@ export default function App() {
         <Route path="/adjustments" element={<Adjustments />} />
         <Route path="/adjustments/:id" element={<AdjustmentDetail />} />
         <Route path="/move-history" element={<MoveHistory />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<ManagerRoute><Settings /></ManagerRoute>} />
         <Route path="/profile" element={<MyProfile />} />
       </Route>
     </Routes>

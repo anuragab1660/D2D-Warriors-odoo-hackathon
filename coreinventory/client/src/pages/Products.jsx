@@ -7,10 +7,13 @@ import StatusBadge from '../components/StatusBadge'
 import Modal from '../components/Modal'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast'
+import useAuthStore from '../store/authStore'
 
 export default function Products() {
   const navigate = useNavigate()
   const { toasts, toast, removeToast } = useToast()
+  const { user } = useAuthStore()
+  const isManager = user?.role === 'manager'
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [locations, setLocations] = useState([])
@@ -90,7 +93,7 @@ export default function Products() {
     )},
     { key: 'per_unit_cost', label: 'Per Unit Cost', render: (v) => `₹${parseFloat(v).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` },
     { key: 'on_hand', label: 'On Hand', render: (v, row) => (
-      editStockRow === row.id ? (
+      isManager && editStockRow === row.id ? (
         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
           <input
             autoFocus
@@ -107,12 +110,16 @@ export default function Products() {
           <button className="text-xs text-gray-500" onClick={e => { e.stopPropagation(); setEditStockRow(null) }}>✕</button>
         </div>
       ) : (
-        <button
-          className="font-bold text-gray-800 hover:text-indigo-600 hover:underline cursor-pointer"
-          onClick={e => { e.stopPropagation(); setEditStockRow(row.id); setEditStockVal(v) }}
-        >
-          {v}
-        </button>
+        isManager ? (
+          <button
+            className="font-bold text-gray-800 hover:text-indigo-600 hover:underline cursor-pointer"
+            onClick={e => { e.stopPropagation(); setEditStockRow(row.id); setEditStockVal(v) }}
+          >
+            {v}
+          </button>
+        ) : (
+          <span className="font-bold text-gray-800">{v}</span>
+        )
       )
     )},
     { key: 'free_to_use', label: 'Free to Use', render: (v) => <span className={parseFloat(v) < 0 ? 'text-red-500' : ''}>{v}</span> },
@@ -152,12 +159,14 @@ export default function Products() {
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-        >
-          <Plus size={16} /> New Product
-        </button>
+        {isManager && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+          >
+            <Plus size={16} /> New Product
+          </button>
+        )}
       </div>
 
       <DataTable

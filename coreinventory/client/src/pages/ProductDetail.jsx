@@ -7,11 +7,14 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import Spinner from '../components/Spinner'
 import Toast from '../components/Toast'
 import useToast from '../hooks/useToast'
+import useAuthStore from '../store/authStore'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { toasts, toast, removeToast } = useToast()
+  const { user } = useAuthStore()
+  const isManager = user?.role === 'manager'
   const [product, setProduct] = useState(null)
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -90,29 +93,31 @@ export default function ProductDetail() {
           <h2 className="font-heading font-bold text-2xl text-gray-900">{product.name}</h2>
           <p className="text-sm text-gray-500">{product.sku}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {!editing ? (
-            <>
-              <button onClick={() => setEditing(true)} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                <Pencil size={15} /> Edit
-              </button>
-              <button onClick={() => setShowDelete(true)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                <Trash2 size={15} /> Delete
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={handleSave} disabled={saving} className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                {saving && <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />}
-                <Check size={15} /> Save
-              </button>
-              <button onClick={() => { setEditing(false); setForm({ name: product.name, sku: product.sku, category_id: product.category_id || '', uom: product.uom, per_unit_cost: product.per_unit_cost, reorder_qty: product.reorder_qty }) }}
-                className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                <X size={15} /> Cancel
-              </button>
-            </>
-          )}
-        </div>
+        {isManager && (
+          <div className="flex items-center gap-2">
+            {!editing ? (
+              <>
+                <button onClick={() => setEditing(true)} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                  <Pencil size={15} /> Edit
+                </button>
+                <button onClick={() => setShowDelete(true)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                  <Trash2 size={15} /> Delete
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={handleSave} disabled={saving} className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                  {saving && <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />}
+                  <Check size={15} /> Save
+                </button>
+                <button onClick={() => { setEditing(false); setForm({ name: product.name, sku: product.sku, category_id: product.category_id || '', uom: product.uom, per_unit_cost: product.per_unit_cost, reorder_qty: product.reorder_qty }) }}
+                  className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                  <X size={15} /> Cancel
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Product Info Card */}
@@ -158,7 +163,7 @@ export default function ProductDetail() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Location', 'Warehouse', 'Qty', 'Status', 'Actions'].map(h => (
+                {['Location', 'Warehouse', 'Qty', 'Status', ...(isManager ? ['Actions'] : [])].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -169,7 +174,7 @@ export default function ProductDetail() {
                   <td className="px-4 py-3 font-medium">{s.location_name}</td>
                   <td className="px-4 py-3 text-gray-500">{s.warehouse_name}</td>
                   <td className="px-4 py-3">
-                    {editStockId === s.id ? (
+                    {isManager && editStockId === s.id ? (
                       <div className="flex items-center gap-2">
                         <input autoFocus type="number" value={editStockVal} onChange={e => setEditStockVal(e.target.value)}
                           className="border border-indigo-400 rounded px-2 py-1 w-24 text-sm focus:outline-none"
@@ -184,12 +189,14 @@ export default function ProductDetail() {
                   <td className="px-4 py-3">
                     <StatusBadge status={parseFloat(s.qty) <= parseFloat(product.reorder_qty) ? 'LOW' : 'OK'} />
                   </td>
-                  <td className="px-4 py-3">
-                    <button onClick={() => { setEditStockId(s.id); setEditStockVal(s.qty) }}
-                      className="text-gray-400 hover:text-indigo-600 transition-colors">
-                      <Pencil size={15} />
-                    </button>
-                  </td>
+                  {isManager && (
+                    <td className="px-4 py-3">
+                      <button onClick={() => { setEditStockId(s.id); setEditStockVal(s.qty) }}
+                        className="text-gray-400 hover:text-indigo-600 transition-colors">
+                        <Pencil size={15} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
