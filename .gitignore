@@ -1,0 +1,20 @@
+# Node modules
+node_modules/
+coreinventory/client/node_modules/
+coreinventory/server/node_modules/
+
+# Build output
+coreinventory/client/dist/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
