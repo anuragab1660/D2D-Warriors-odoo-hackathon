@@ -18,8 +18,8 @@ export default function MyProfile() {
 
   const handleNameSave = async (e) => {
     e.preventDefault()
-    if (!nameForm.name || nameForm.name.length < 6 || nameForm.name.length > 12) {
-      toast.error('Name must be between 6 and 12 characters')
+    if (!nameForm.name || nameForm.name.length < 6 || nameForm.name.length > 15) {
+      toast.error('Name must be between 6 and 15 characters')
       return
     }
     setNameSaving(true)
@@ -83,7 +83,7 @@ export default function MyProfile() {
         <form onSubmit={handleNameSave} className="space-y-4">
           <h4 className="font-heading font-semibold text-gray-800 text-base">Edit Profile</h4>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name (6–12 characters)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name (6–15 characters)</label>
             <input
               value={nameForm.name}
               onChange={e => setNameForm({ name: e.target.value })}

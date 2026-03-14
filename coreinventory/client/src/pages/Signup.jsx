@@ -14,8 +14,8 @@ export default function Signup() {
 
   const validate = () => {
     const errs = {}
-    if (!form.name || form.name.length < 6 || form.name.length > 12) {
-      errs.name = 'Name must be between 6 and 12 characters'
+    if (!form.name || form.name.length < 6 || form.name.length > 15) {
+      errs.name = 'Name must be between 6 and 15 characters'
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!form.email || !emailRegex.test(form.email)) {
@@ -100,7 +100,7 @@ export default function Signup() {
                 {serverError}
               </div>
             )}
-            {field('name', 'Name (6–12 characters)', 'text', 'Enter login name')}
+            {field('name', 'Name (6–15 characters)', 'text', 'Enter login name')}
             {field('email', 'Email', 'email', 'you@example.com')}
             {field('password', 'Password', 'password', '••••••••')}
             {field('confirmPassword', 'Confirm Password', 'password', '••••••••')}
