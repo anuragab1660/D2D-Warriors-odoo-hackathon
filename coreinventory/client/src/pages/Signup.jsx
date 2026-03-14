@@ -98,7 +98,7 @@ export default function Signup() {
                 {serverError}
               </div>
             )}
-            {field('name', 'Name', 'text', 'Enter login name')}
+            {field('name', 'Name (6–12 characters)', 'text', 'Enter login name')}
             {field('email', 'Email', 'email', 'you@example.com')}
             {field('password', 'Password', 'password', '••••••••')}
             {field('confirmPassword', 'Confirm Password', 'password', '••••••••')}

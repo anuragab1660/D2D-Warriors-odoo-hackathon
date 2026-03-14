@@ -80,7 +80,7 @@ export default function MyProfile() {
         <form onSubmit={handleNameSave} className="space-y-4">
           <h4 className="font-heading font-semibold text-gray-800 text-base">Edit Profile</h4>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name (6–12 characters)</label>
             <input
               value={nameForm.name}
               onChange={e => setNameForm({ name: e.target.value })}
