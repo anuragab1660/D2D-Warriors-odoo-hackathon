@@ -1,1 +1,1 @@
-# D2D-Warriors-odoo-hackathon-
+# CoreInventory
