@@ -124,6 +124,16 @@ export default function DeliveryDetail() {
     } catch (err) { toast.error(err.response?.data?.error || 'Action failed') } finally { setActionLoading(false) }
   }
 
+  const handleStatusChange = async (newStatus) => {
+    if (newStatus === status) return
+    let action
+    if (newStatus === 'waiting' || newStatus === 'ready') action = 'todo'
+    else if (newStatus === 'done') action = 'validate'
+    else if (newStatus === 'cancelled') action = 'cancel'
+    else return
+    await handleAction(action)
+  }
+
   const addLine = () => setLines(p => [...p, { product_id: '', qty_demanded: 0 }])
   const removeLine = (i) => setLines(p => p.filter((_, idx) => idx !== i))
   const updateLine = (i, field, val) => setLines(p => p.map((l, idx) => idx === i ? { ...l, [field]: val } : l))
@@ -255,6 +265,26 @@ export default function DeliveryDetail() {
             <input value={form.responsible} onChange={e => setForm(p => ({ ...p, responsible: e.target.value }))} disabled={!isEditable}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50" />
           </div>
+          {!isNew && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                value={status}
+                onChange={e => handleStatusChange(e.target.value)}
+                disabled={actionLoading || status === 'done' || status === 'cancelled'}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 capitalize"
+              >
+                <option value="draft">Draft</option>
+                <option value="waiting">Waiting</option>
+                <option value="ready">Ready</option>
+                <option value="done">Done</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              {(status === 'done' || status === 'cancelled') && (
+                <p className="text-xs text-gray-400 mt-1">Status is locked — cannot be changed</p>
+              )}
+            </div>
+          )}
           <div className="col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
             <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} disabled={!isEditable} rows={2}
